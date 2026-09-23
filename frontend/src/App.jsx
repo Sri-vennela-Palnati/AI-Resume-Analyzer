@@ -330,7 +330,7 @@ function App() {
   const [jobs, setJobs] = useState([
     {
       id: 1,
-      title: "Python Developer",
+      title: "",
       description: "",
     },
   ]);
@@ -340,11 +340,15 @@ function App() {
   const [error, setError] = useState("");
 
   const [showHistory, setShowHistory] = useState(false);
-
-  const [history, setHistory] = useState(() => {
+const [history, setHistory] = useState(() => {
+  try {
     const savedHistory = localStorage.getItem("careerfit_history");
     return savedHistory ? JSON.parse(savedHistory) : [];
-  });
+  } catch (error) {
+    console.error("Failed to load history:", error);
+    return [];
+  }
+});
 
   const addJob = () => {
     setJobs([
@@ -454,8 +458,15 @@ function App() {
   };
 
   const getJobTitle = (jobIndex) => {
-    return jobs[jobIndex - 1]?.title || `Job ${jobIndex}`;
-  };
+  return jobs[jobIndex - 1]?.title || `Job ${jobIndex}`;
+};
+
+const getHistoryJobTitle = (historyItem, jobIndex) => {
+  return (
+    historyItem.jobs?.[jobIndex - 1]?.title ||
+    `Job ${jobIndex}`
+  );
+};
 
   const summary = results ? computeSummary(results, getJobTitle) : null;
 
@@ -583,9 +594,10 @@ function App() {
                   <p style={styles.historyDate}>{item.date}</p>
                   <p>
                     <strong>Best Match:</strong>{" "}
-                    {item.jobs?.[item.results.best_match?.job_index - 1]
-                      ?.title ||
-                      `Job ${item.results.best_match?.job_index}`}
+                    s?.{getHistoryJobTitle(
+  item,
+  item.results.best_match?.job_index
+)}
                   </p>
                   <p>
                     <strong>Match Score:</strong>{" "}
@@ -596,18 +608,20 @@ function App() {
                     <button
                       style={styles.viewHistoryButton}
                       onClick={() => {
-                        setResults(item.results);
-                        if (item.jobs) {
-                          setJobs(
-                            item.jobs.map((job, index) => ({
-                              id: Date.now() + index,
-                              title: job.title,
-                              description: job.description,
-                            }))
-                          );
-                        }
-                        setShowHistory(false);
-                      }}
+  setResults(item.results);
+
+  if (item.jobs) {
+    setJobs(
+      item.jobs.map((job, index) => ({
+        id: Date.now() + index,
+        title: job.title,
+        description: job.description,
+      }))
+    );
+  }
+
+  setShowHistory(false);
+}}
                     >
                       View Analysis
                     </button>
